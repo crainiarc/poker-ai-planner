@@ -49,6 +49,6 @@ if __name__ == "__main__":
     except Exception, e:
         print ""
         traceback.print_exc()
-        
+
     if platform.system() == 'Windows':
         raw_input('\nPress enter to continue')

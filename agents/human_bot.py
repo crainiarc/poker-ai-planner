@@ -3,8 +3,8 @@ from bot import Bot
 
 class HumanBot(Bot):
     def turn(self):
-        # Does not work
-        action = input('Action: ').split()
+        action = raw_input('Action: ').split()
+        print action
         if action[0] == 'raise':
             return self.action('raise', amount=int(action[1]))
         elif action[0] == 'check' or action[0] == 'call':
