@@ -1,4 +1,5 @@
 from helper_bot import HelperBot
+from math import *
 from cards import n_card_rank
 
 import random
@@ -6,11 +7,12 @@ import random
 cardsDict = [(r, s) for s in ['d', 'c', 'h', 's'] for r in range(2, 15)]
 
 class PokerState:
-    def __init__(self, hand, community_cards, a_credits, b_credits, curr_pot_diff):
+    def __init__(self, hand, community_cards, a_credits, b_credits, curr_pot_diff, pot):
         self.credits = [a_credits, b_credits]
         self.hand = hand[:]
         self.community_cards = community_cards[:]
         self.playerJustMoved = 0
+        self.pot = pot
 
         if curr_pot_diff == 0:
             self.moves_taken = []
@@ -20,7 +22,9 @@ class PokerState:
             self.moves_taken = [1, 4]
 
     def Clone(self):
-        ps = PokerState(self.hand, self.community_cards, self.credits[0], self.credits[1], self.getPotDifference())
+        ps = PokerState(self.hand, self.community_cards, self.credits[0],
+            self.credits[1], self.getPotDifference(), self.pot)
+
         ps.playerJustMoved = self.playerJustMoved
         return ps
 
@@ -30,11 +34,14 @@ class PokerState:
         diff = self.getPotDifference()
 
         if move == 1 or move == 2:
-            credits[player] -= diff
+            self.credits[player] -= diff
+            self.pot += diff
         elif move == 3:
-            credit[player] -= (diff + 10)
+            self.credits[player] -= (diff + 10)
+            self.pot += (diff + 10)
         elif move == 4:
-            credit[player] -= (diff + 20)
+            self.credits[player] -= (diff + 20)
+            self.pot += (diff + 20)
 
         self.playerJustMoved = (self.playerJustMoved + 1) % 2
 
@@ -68,7 +75,7 @@ class PokerState:
         if self.getFolded() == playerjm:
             return 0
         elif self.getFolded() == (playerjm + 1) % 2:
-            return 1
+            return self.pot #1
         else:
             # evaluate
             opp = []
@@ -82,21 +89,23 @@ class PokerState:
                 if not c in self.hand + self.community_cards + opp:
                     self.community_cards += [c]
 
-            A = n_card_rank(hand + self.community_cards)
+            # print self.hand + self.community_cards
+            # print opp + self.community_cards
+            A = n_card_rank(self.hand + self.community_cards)
             B = n_card_rank(opp + self.community_cards)
             if (A == max(A, B)):
-                return 1 if playerjm == 0 else 0
+                return self.pot if playerjm == 0 else 0
             else:
-                return 0 if playerjm == 0 else 1
+                return 0 if playerjm == 0 else self.pot
 
     def getPlayerTurn(self):
         return len(self.moves_taken) % 2
 
     def getFolded(self):
-        if self.moves_taken[-1] == 0:
-            return len(self.moves_taken) % 2 + 1
-        else:
+        if len(self.moves_taken) == 0 or self.moves_taken[-1] != 0:
             return -1
+        else:
+            return len(self.moves_taken) % 2 + 1
 
     def getPotDifference(self):
         sums = [0, 0]
@@ -230,37 +239,20 @@ def UCT(rootstate, itermax, verbose = False):
 
 class MctsBot(HelperBot):
     def turn(self):
-        # print "Community Cards: " + str(self.get_community_cards())
-        # print "Hand: " + str(self.get_hand())
-
         self._process_events()
 
         state = PokerState(self.hand, self.community_cards, self.credits,
-            self.opponent[1], self.pot_diff)
+            self.opponent[1], self.pot_diff, self.pot)
         m = UCT(rootstate = state, itermax = 1000, verbose = False)
-        if m == 0:
-            self.action('fold')
-        elif m == 1:
-            self.action('check')
-        elif m == 2:
-            self.action('call')
-        elif m == 3:
-            self.action('raise', 10)
-        elif m == 4:
-            self.action('raise', 20)
-
-
-        # action = raw_input('Action: ').split()
-        # if action[0] == 'raise':
-        #     return self.action('raise', amount=int(action[1]))
-        # elif action[0] == 'check' or action[0] == 'call':
-        #     return self.action(action[0])
-        # else:
-        #     return self.action('fold')
+        action_list = [self.action('fold'), self.action('check'),
+                       self.action('call'), self.action('raise', 10),
+                       self.action('raise', 20)]
+        return action_list[m]
 
     def _process_events(self):
         for event in self.event_queue:
-            method = getattr(self, '_' + event.type)
+            method_name = '_' + event.type
+            method = getattr(self, method_name)
             if not method:
                 raise Exception("Method %s not implemented" % method_name)
             method(event)
@@ -296,11 +288,11 @@ class MctsBot(HelperBot):
 
     def _turn(self, event):
         self.round = "turn"
-        self.community_cards += event.card
+        self.community_cards += [event.card]
 
     def _river(self, event):
         self.round = "river"
-        self.community_cards += event.card
+        self.community_cards += [event.card]
 
     def _action(self, event):
         if self.player_id != event.player_id:
