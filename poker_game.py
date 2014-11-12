@@ -19,7 +19,7 @@ class WinByDefault(Exception):
         self.winner = winner
 
 class PokerGame(object):
-    def __init__(self, bots, initial_credits=10000, num_decks=1,
+    def __init__(self, bots, initial_credits=1000, num_decks=1,
             small_blind_amount=10, seed=None):
         self.players = []
         self.credits = {}
@@ -101,12 +101,24 @@ class PokerGame(object):
         return button
     
     def broadcast_event(self, event):
-        self.output("Broadcast Event: %s" % event)
+        # self.output("Broadcast Event: %s" % event)
+
+        if event.type == 'button':
+            self.output("Player %d has the button" % event.player_id)
+        if event.type == 'flop':
+            self.output("Flop: %s" % event.cards)
+        if event.type == 'turn':
+            self.output("Turn: %s" % str(event.card))
+        if event.type == 'river':
+            self.output("River: %s" % str(event.card))
+        if event.type == 'win':
+            self.output('Player %d wins!' % event.player_id)
+
         for player in self.active_players:
             player.event_queue.append(event)
             
     def send_event(self, player, event):
-        self.output("Event to player %d: %s" % (self.id[player], event))
+        # self.output("Event to player %d: %s" % (self.id[player], event))
         player.event_queue.append(event)
             
     def remove_loser(self, player):
@@ -136,9 +148,9 @@ class Round(object):
         self.game.broadcast_event(Event('button', player_id=self.game.id[self.button]))
         # do the blinds
         small_blind, big_blind = self.calculate_blinds(self.button)
-        self.game.broadcast_event(Event('small_blind', player_id=self.game.id[small_blind]))
+        # self.game.broadcast_event(Event('small_blind', player_id=self.game.id[small_blind]))
         self.bet(small_blind, self.game.small_blind_amount)
-        self.game.broadcast_event(Event('big_blind', player_id=self.game.id[big_blind]))
+        # self.game.broadcast_event(Event('big_blind', player_id=self.game.id[big_blind]))
         self.bet(big_blind, self.game.big_blind_amount)
         
         hole_cards = {}
