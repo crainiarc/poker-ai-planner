@@ -23,17 +23,17 @@ class PokerState:
         else:
             self.moves_taken = [1, 4]
 
-    def Clone(self):
+    def clone(self):
         ps = PokerState(self.hand, self.community_cards, self.credits[0],
-            self.credits[1], self.getPotDifference(), self.pot)
+                        self.credits[1], self._get_pot_difference(), self.pot)
 
         ps.playerJustMoved = self.playerJustMoved
         return ps
 
-    def DoMove(self, move):
+    def do_move(self, move):
         self.moves_taken += [move]
-        player = self.getPlayerTurn()
-        diff = self.getPotDifference()
+        player = self._get_player_turn()
+        diff = self._get_pot_difference()
 
         if move == 1 or move == 2:
             self.credits[player] -= diff
@@ -47,13 +47,12 @@ class PokerState:
 
         self.playerJustMoved = (self.playerJustMoved + 1) % 2
 
-
-    def GetMoves(self):
-        if self.getFolded() != -1 or self.getStageNum() == 5:
+    def get_moves(self):
+        if self._get_folded() != -1 or self._get_stage_num() == 5:
             return []
         
-        player = self.getPlayerTurn()
-        diff = self.getPotDifference()
+        player = self._get_player_turn()
+        diff = self._get_pot_difference()
         
         moves = [0]
         if diff == 0:
@@ -73,11 +72,11 @@ class PokerState:
             
         return moves
 
-    def GetResult(self, playerjm):
-        if self.getFolded() == playerjm:
+    def get_result(self, playerjm):
+        if self._get_folded() == playerjm:
             return 0
-        elif self.getFolded() == (playerjm + 1) % 2:
-            return self.pot #1
+        elif self._get_folded() == (playerjm + 1) % 2:
+            return self.pot  # 1
         else:
             # evaluate
             opp = []
@@ -91,25 +90,23 @@ class PokerState:
                 if not c in self.hand + self.community_cards + opp:
                     self.community_cards += [c]
 
-            # print self.hand + self.community_cards
-            # print opp + self.community_cards
-            A = n_card_rank(self.hand + self.community_cards)
-            B = n_card_rank(opp + self.community_cards)
-            if (A == max(A, B)):
+            player_0 = n_card_rank(self.hand + self.community_cards)
+            player_2 = n_card_rank(opp + self.community_cards)
+            if player_0 == max(player_0, player_2):
                 return self.pot if playerjm == 0 else 0
             else:
                 return 0 if playerjm == 0 else self.pot
 
-    def getPlayerTurn(self):
+    def _get_player_turn(self):
         return len(self.moves_taken) % 2
 
-    def getFolded(self):
+    def _get_folded(self):
         if len(self.moves_taken) == 0 or self.moves_taken[-1] != 0:
             return -1
         else:
             return len(self.moves_taken) % 2 + 1
 
-    def getPotDifference(self):
+    def _get_pot_difference(self):
         sums = [0, 0]
 
         for i in range(1, len(self.moves_taken) + 1):
@@ -121,7 +118,7 @@ class PokerState:
                 pass
         return abs(sums[0] - sums[1])
 
-    def getStageNum(self):
+    def _get_stage_num(self):
         num = 0
         consecutive_check = 0
 
@@ -140,23 +137,17 @@ class PokerState:
         return num
 
 
-
-       
-
-
-
-
-
 class MctsBot(HelperBot):
     def turn(self):
         self._process_events()
-
         state = PokerState(self.hand, self.community_cards, self.credits,
-            self.opponent[1], self.pot_diff, self.pot)
-        m = UCT(rootstate = state, itermax = 1000, verbose = False)
+                           self.opponent[1], self.pot_diff, self.pot)
+
+        m = UCT(rootstate=state, itermax=1000, verbose=False)
         action_list = [self.action('fold'), self.action('check'),
                        self.action('call'), self.action('raise', 10),
                        self.action('raise', 20)]
+
         return action_list[m]
 
     def _process_events(self):
@@ -166,7 +157,6 @@ class MctsBot(HelperBot):
             if not method:
                 raise Exception("Method %s not implemented" % method_name)
             method(event)
-            print event
 
         self.event_queue = []
 
@@ -181,12 +171,6 @@ class MctsBot(HelperBot):
 
     def _button(self, event):
         self.button = self.player_id == event.player_id
-
-    def _big_blind(self, event):
-        pass
-
-    def _small_blind(self, event):
-        pass
 
     def _deal(self, event):
         self.round = "deal"
@@ -218,6 +202,12 @@ class MctsBot(HelperBot):
             self.credits += event.amount
         else:
             self.opponent[1] += event.amount
+
+    def _big_blind(self, event):
+        pass
+
+    def _small_blind(self, event):
+        pass
 
     def _win(self, event):
         pass
