@@ -1,8 +1,10 @@
 from bot import Bot
 
 class HelperBot(Bot):
-    hand = []
-    community_cards = []
+    def __init__(self, id, credits, big_blind_amount, small_blind_amount, *args, **kwargs):
+        super(HelperBot, self).__init__(id, credits, big_blind_amount, small_blind_amount, *args, **kwargs)
+        self.hand = []
+        self.community_cards = []
 
     def get_rank(card):
         return card[0]
@@ -11,15 +13,12 @@ class HelperBot(Bot):
         return card[1]
 
     def get_hand(self):
-        if (self.hand != []):
-            return self.hand
-        else:
-            hand = []
-            for event in self.event_queue:
-                if event.type == 'deal':
-                    hand = event.cards
-            self.hand = hand
-            return hand
+        hand = []
+        for event in self.event_queue:
+            if event.type == 'deal':
+                hand = event.cards
+        self.hand = hand
+        return hand
 
     def update_community_cards(self):
         community_cards = []
