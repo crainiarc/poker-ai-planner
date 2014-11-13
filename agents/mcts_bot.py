@@ -186,8 +186,8 @@ class MctsBot(HelperBot):
                        self.action('raise', 20)]
 
         print("Player %d %s" % (self.player_id, action_names[m]))
-        if m == 0:
-            print self.hand
+        # if m == 0:
+        #     print self.hand
         return action_list[m]
 
     def _process_events(self):
@@ -217,7 +217,7 @@ class MctsBot(HelperBot):
         self.round = "deal"
         self.hand = event.cards[:]
         # self.hand = [(14, 's'), (14, 'h')]
-        print self.hand
+        # print self.hand
 
     def _flop(self, event):
         self.round = "flop"
