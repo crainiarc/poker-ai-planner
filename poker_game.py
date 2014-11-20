@@ -3,6 +3,8 @@ import copy
 import logging
 import collections
 
+import traceback
+
 from cards import Deck, n_card_rank
 from messages import Event, Action
 from pot import Pot
@@ -200,6 +202,7 @@ class Round(object):
         try:
             return player.turn()
         except Exception, e:
+            traceback.print_exc()
             self.game.send_event(player, Event('bad_bot', message='bot threw an exception: ' + str(e), action=None))
             return Action('fold')
             
