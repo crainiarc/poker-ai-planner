@@ -5,3 +5,4 @@ The AI we intend to test are:
 
 - Monte Carlo Tree Search
 - Adaptive Planning
+- Opponent Modelling
