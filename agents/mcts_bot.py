@@ -179,7 +179,7 @@ class MctsBot(HelperBot):
                            self.opponent[1], self.pot_diff, self.pot, self.invested[self.player_id],
                            self.invested[(self.player_id + 1) % 2])
 
-        m = UCT(rootstate=state, itermax=1000, verbose=False)
+        m = UCT(rootstate=state, itermax=100000, verbose=False)
         action_names = ['fold', 'check', 'call', 'raise 10', 'raise 20']
         action_list = [self.action('fold'), self.action('check'),
                        self.action('call'), self.action('raise', 10),
