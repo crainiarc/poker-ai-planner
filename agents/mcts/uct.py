@@ -1,4 +1,7 @@
 import random
+import json
+
+from agents.mcts.node_viz import node_to_json
 from agents.mcts.node import Node
 
 __author__ = 'crainiarc'
@@ -37,6 +40,9 @@ def UCT(rootstate, itermax, verbose = False):
 
     # Output some information about the tree - can be omitted
     if (verbose): print rootnode.TreeToString(0)
-    else: print rootnode.ChildrenToString()
+    # else: print rootnode.ChildrenToString()
+    with open('graph_file.json', 'w') as fp:
+        output = json.dumps(node_to_json(rootnode), indent=4)
+        fp.write(output)
 
     return sorted(rootnode.childNodes, key = lambda c: c.visits)[-1].move # return the move that was most visited
