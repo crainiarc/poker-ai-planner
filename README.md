@@ -3,7 +3,7 @@ poker-ai-planner
 To investigate the performances of various pokerbots.
 The AI we intend to test are:
 
-- Monte Carlo Tree Search
+- Monte Carlo Tree Search (using UCT)
 - Adaptive Planning
 - Opponent Modelling
 
